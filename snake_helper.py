@@ -74,7 +74,7 @@ def initial_state() -> tuple:
         if (bad_fruits[i] not in snake1_index) and (bad_fruits[i] not in snake2_index):
             board[bad_fruits[i][0],bad_fruits[i][1]] = -5
 
-    state = (0, board)
+    state = (0, board,snake1_index,snake2_index)
     return state  # replace with your implementation
 
 # TODO: implement game_over(state)
@@ -85,7 +85,7 @@ def initial_state() -> tuple:
 #   https://docs.python.org/3/library/functions.html#all
 def game_over(state: tuple) -> bool:
     result = True
-    player, board = state
+    player, board, snake1_index,snake2_index = state
     board_size = 10
     for i in range(0, board_size):
         for j in range(0, board_size):
@@ -103,38 +103,51 @@ def game_over(state: tuple) -> bool:
 # The positions in the returned list should be ordered from lowest to highest.
 # Your code should not modify the board list.
 def valid_actions(state: tuple) -> list:
-    player, board = state
-
+    player, board ,snake1_index,snake2_index= state
+    board_size = 10
     if player == 0:
-        actions = [i for i in range(6) if board[i] != 0]
-    else:
-        actions = [i for i in range(7, 13) if board[i] != 0]
+        head = snake1_index[0]
+        possible_positions = [[head[0]+1,head[1]],[head[0]-1,head[1]],[head[0],head[1]+1],[head[0],head[1]-1]]
+        actions = []
+        for i in possible_positions:
+            if (i[0] >=0 and i[0]< board_size and i[0] >=0 and i[0]< board_size and board[i[0],i[1]] != 1 and board[i[0],i[1]] != -1 and board[i[0],i[1]] != 2 and board[i[0],i[1]] != -2 ):
+                actions.append(i)
+    if player == 1:
+        head = snake2_index[0]
+        possible_positions = [[head[0]+1,head[1]],[head[0]-1,head[1]],[head[0],head[1]+1],[head[0],head[1]-1]]
+        actions = []
+        for i in possible_positions:
+            if (i[0] >=0 and i[0]< board_size and i[0] >=0 and i[0]< board_size and board[i[0],i[1]] != 1 and board[i[0],i[1]] != -1 and board[i[0],i[1]] != 2 and board[i[0],i[1]] != -2 ):
+                actions.append(i)
+
+
+
     return actions  # replace with your implementation
 
-# TODO: implement mancala_of(player)
-# Return the numeric position of the given player's mancala.
-# Player 0's mancala is on the right and player 1's mancala is on the left.
-# You can assume player is either 0 or 1.
-def mancala_of(player: int) -> int:
-
-    if player == 0:
-        mancala = 6
-    else:
-        mancala = 13
-    return mancala  # replace with your implementation
+# # TODO: implement length_of(player)
+# # Return the length of the given player's snake body.
+# # You can assume player is either 0 or 1.
+# def length_of(player: int) -> int:
+#
+#     if player == 0:
+#         snake_len = len()
+#     else:
+#         mancala = 13
+#     return mancala  # replace with your implementation
 
 # TODO: implement pits_of(player)
 # Return a list of numeric positions corresponding to the given player's pits.
 # The positions in the list should be ordered from lowest to highest.
 # Player 0's pits are on the bottom and player 1's pits are on the top.
 # You can assume player is either 0 or 1.
-def pits_of(player: int) -> list:
-    if player == 0:
-        pits = [i for i in range(6)]
-    else:
-        pits = [i for i in range(7,13)]
 
-    return pits  # replace with your implementation
+# def pits_of(player: int) -> list:
+#     if player == 0:
+#         pits = [i for i in range(6)]
+#     else:
+#         pits = [i for i in range(7,13)]
+#
+#     return pits  # replace with your implementation
 
 # TODO: implement player_who_can_do(move)
 # Return the player (either 0 or 1) who is allowed to perform the given move.
@@ -142,13 +155,13 @@ def pits_of(player: int) -> list:
 # For example, position 2 is one of player 0's pits.
 # So player_who_can_do(2) should return 0.
 # You can assume that move is a valid position for one of the players.
-def player_who_can_do(move: int) -> int:
-
-    if move in range(6):
-        return 0
-    else:
-        return 1
-     # replace with your implementation
+# def player_who_can_do(move: int) -> int:
+#
+#     if move in range(6):
+#         return 0
+#     else:
+#         return 1
+#      # replace with your implementation
 
 # TODO: implement opposite_from(position)
 # Return the position of the pit that is opposite from the given position.
@@ -179,6 +192,7 @@ def play_turn(move: int, board: list) -> tuple:
     # This is important for minimax, so that different nodes do not share the same mutable data
     # Your code should NOT modify the original input board or else bugs may show up elsewhere
     board = list(board)
+
     player = player_who_can_do(move)
     gemstomove = board[move]
     board[move] = 0
