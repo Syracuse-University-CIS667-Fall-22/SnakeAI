@@ -186,14 +186,16 @@ def opposite_from(position: int) -> int:
 # Lastly, the % (modulo) operator may be useful:
 #  (x % y) returns the remainder of x / y
 #  from: https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex
-def play_turn(move: int, board: list) -> tuple:
+def play_turn(player, move: list, board: list) -> tuple:
 
     # Make a copy of the board before anything else
     # This is important for minimax, so that different nodes do not share the same mutable data
     # Your code should NOT modify the original input board or else bugs may show up elsewhere
-    board = list(board)
 
-    player = player_who_can_do(move)
+    if player == 0:
+        
+
+
     gemstomove = board[move]
     board[move] = 0
     current = move
