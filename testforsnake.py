@@ -43,5 +43,6 @@ for i in range(len(bad_fruits)):
     if (bad_fruits[i] not in snake1_index) and (bad_fruits[i] not in snake2_index):
         board[bad_fruits[i][0],bad_fruits[i][1]] = -5
 
-
-print(board)
+B = np.array(board, copy=True)
+print(B)
+print(B is board)

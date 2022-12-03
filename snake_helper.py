@@ -110,14 +110,14 @@ def valid_actions(state: tuple) -> list:
         possible_positions = [[head[0]+1,head[1]],[head[0]-1,head[1]],[head[0],head[1]+1],[head[0],head[1]-1]]
         actions = []
         for i in possible_positions:
-            if (i[0] >=0 and i[0]< board_size and i[0] >=0 and i[0]< board_size and board[i[0],i[1]] != 1 and board[i[0],i[1]] != -1 and board[i[0],i[1]] != 2 and board[i[0],i[1]] != -2 ):
+            if (i[0] >=0 and i[0]< board_size and i[1] >=0 and i[1]< board_size and board[i[0],i[1]] != 1 and board[i[0],i[1]] != -1 and board[i[0],i[1]] != 2 and board[i[0],i[1]] != -2 ):
                 actions.append(i)
     if player == 1:
         head = snake2_index[0]
         possible_positions = [[head[0]+1,head[1]],[head[0]-1,head[1]],[head[0],head[1]+1],[head[0],head[1]-1]]
         actions = []
         for i in possible_positions:
-            if (i[0] >=0 and i[0]< board_size and i[0] >=0 and i[0]< board_size and board[i[0],i[1]] != 1 and board[i[0],i[1]] != -1 and board[i[0],i[1]] != 2 and board[i[0],i[1]] != -2 ):
+            if (i[0] >=0 and i[0]< board_size and i[1] >=0 and i[1]< board_size and board[i[0],i[1]] != 1 and board[i[0],i[1]] != -1 and board[i[0],i[1]] != 2 and board[i[0],i[1]] != -2 ):
                 actions.append(i)
 
 
@@ -186,74 +186,97 @@ def opposite_from(position: int) -> int:
 # Lastly, the % (modulo) operator may be useful:
 #  (x % y) returns the remainder of x / y
 #  from: https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex
-def play_turn(player, move: list, board: list) -> tuple:
+def play_turn(player,snake1_index,snake2_index, move: list, board: list) -> tuple:
 
     # Make a copy of the board before anything else
     # This is important for minimax, so that different nodes do not share the same mutable data
     # Your code should NOT modify the original input board or else bugs may show up elsewhere
+    board = np.array(board, copy=True)
+    snake1_index = list(snake1_index)
+    snake2_index = list(snake2_index)
 
     if player == 0:
-        
 
-
-    gemstomove = board[move]
-    board[move] = 0
-    current = move
-    current += 1
-    while gemstomove>0:
-        if(current == mancala_of(1-player)):
-            current += 1
-            current = current % 14
-            continue
-        if(gemstomove == 1):
-            if(current  == mancala_of(player)):
-                gemstomove -= 1
-                board[current] += 1
-                new_player = player
-                new_state = (new_player,board)
-                return new_state
+        if(board[move[0],move[1]] == 0):
+            head = snake1_index[0]
+            snake1_index.insert(0,move)
+            tail = snake1_index.pop()
+            board[move[0],move[1]] = 2
+            board[head[0],head[1]] = 1
+            board[tail[0],tail[1]] = 0
+        elif(board[move[0],move[1]] == 5):
+            head = snake1_index[0]
+            snake1_index.insert(0,move)
+            board[move[0],move[1]] = 2
+            board[head[0],head[1]] = 1
+        elif(board[move[0],move[1]] == -5):
+            head = snake1_index[0]
+            if(len(snake1_index) == 2):
+                snake1_index.insert(0,move)
+                snake1_index.pop()
+                snake1_index.pop()
+                board[move[0],move[1]] = 2
+                board[head[0],head[1]] = 0
+            elif(len(snake1_index) == 1):
+                snake1_index.pop()
+                board[move[0],move[1]] = 0
+                board[head[0],head[1]] = 0
             else:
-                if(board[current] == 0 and board[12-current]!=0):
-                    board[mancala_of(player)] += 1
-                    board[mancala_of(player)] += board[12-current]
-                    board[12-current] = 0
-                    new_state = (1-player,board)
-                    return new_state
-                else:
-                    board[current] += 1
-                    new_state = (1-player,board)
-                    return new_state
-        else:
-            gemstomove -= 1
-            board[current] += 1
-            current += 1
-            current = current % 14
+                snake1_index.insert(0,move)
+                tail1 = snake1_index.pop()
+                tail2 = snake1_index.pop()
+                board[move[0],move[1]] = 2
+                board[head[0],head[1]] = 1
+                board[tail1[0],tail1[1]] = 0
+                board[tail2[0],tail2[1]] = 0
 
 
 
+    if player == 1:
 
-# TODO: implement clear_pits(board)
-# Return a new list representing the game state after clearing the pits from the board.
-# When clearing pits, any gems in a player's pits get moved to that player's mancala.
-# Check the pdf instructions for more detail about clearing pits.
-def clear_pits(board: list) -> list:
-    board = list(board)
-    for i in range(6):
-        board[6] += board[i]
-        board[i] = 0
-    for i in range(7, 13):
-        board[13] += board[i]
-        board[i] = 0
+        if(board[move[0],move[1]] == 0):
+            head = snake2_index[0]
+            snake2_index.insert(0,move)
+            tail = snake2_index.pop()
+            board[move[0],move[1]] = 2
+            board[head[0],head[1]] = 1
+            board[tail[0],tail[1]] = 0
+        elif(board[move[0],move[1]] == 5):
+            head = snake2_index[0]
+            snake2_index.insert(0,move)
+            board[move[0],move[1]] = 2
+            board[head[0],head[1]] = 1
+        elif(board[move[0],move[1]] == -5):
+            head = snake2_index[0]
+            if(len(snake2_index) == 2):
+                snake2_index.insert(0,move)
+                snake2_index.pop()
+                snake2_index.pop()
+                board[move[0],move[1]] = 2
+                board[head[0],head[1]] = 0
+            elif(len(snake2_index) == 1):
+                snake2_index.pop()
+                board[move[0],move[1]] = 0
+                board[head[0],head[1]] = 0
+            else:
+                snake2_index.insert(0,move)
+                tail1 = snake2_index.pop()
+                tail2 = snake2_index.pop()
+                board[move[0],move[1]] = 2
+                board[head[0],head[1]] = 1
+                board[tail1[0],tail1[1]] = 0
+                board[tail2[0],tail2[1]] = 0
+    new_player = 1 - player
 
-    return board  # replace with your implementation
+    new_state = (new_player, board,snake1_index,snake2_index)
+    return new_state
+
 
 # This one is done for you.
 # Plays a turn and clears pits if needed.
 def perform_action(action, state):
-    player, board = state
-    new_player, new_board = play_turn(action, board)
-    if 0 in [len(valid_actions((0, new_board))), len(valid_actions((1, new_board)))]:
-        new_board = clear_pits(new_board)
+    player, board , snake1_index, snake2_index= state
+    new_player, new_board , snake1_index, snake2_index = play_turn(player, snake1_index,snake2_index, action , board)
     return new_player, new_board
 
 # TODO: implement score_in(state)
