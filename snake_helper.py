@@ -284,24 +284,28 @@ def perform_action(action, state):
 # Return the score in the given state.
 # The score is the number of gems in player 0's mancala, minus the number of gems in player 1's mancala.
 def score_in(state: tuple) -> int:
-    player, board = state
-    score = board[6] - board[13]
+    player, board , snake1_index, snake2_index= state
+    score = len(snake1_index)
     return score # replace with your implementation
 
 # TODO: implement is_tied(board)
 # Return True if the game is tied in the given board state, False otherwise.
 # A game is tied if both players have the same number of gems in their mancalas.
 # You can assume all pits have already been cleared on the given board.
-def is_tied(board: list) -> bool:
-    tied = ( board[6] == board[13] )
+def is_tied(state) -> bool:
+    player, board , snake1_index, snake2_index= state
+
+    tied = ( len(snake1_index) == len(snake2_index) )
     return tied # replace with your implementation
 
 # TODO: implement winner_of(board)
 # Return the winning player (either 0 or 1) in the given board state.
 # The winner is the player with more gems in their mancala.
 # You can assume it is not a tied game, and all pits have already been cleared.
-def winner_of(board: list) -> int:
-    if (board[6] > board[13]):
+def winner_of(state) -> int:
+    player, board , snake1_index, snake2_index= state
+
+    if (len(snake1_index) > len(snake2_index)):
         return 0
     return 1 # replace with your implementation
 
@@ -328,22 +332,4 @@ def winner_of(board: list) -> int:
 #   There are exactly 8 blank spaces before the left (padded) mancala number.
 #   There is exactly 1 blank space between each (padded) pit number.
 #   The returned string should start and end with new-line characters ("\n")
-def string_of(board: list) -> str:
-    a = "\n          "
-    for i in range(12,6,-1):
-        a += " "
-        a += pad(board[i])
-    a +="\n        "
-    a += pad(board[13])
-    for i in range(12,6,-1):
-        a += "   "
-    a += " "
-    a += pad(board[6])
-    a +="\n          "
-    for i in range(6):
-        a += " "
-        a += pad(board[i])
-    a += "\n"
-
-    return a # replace with your implementation
 
