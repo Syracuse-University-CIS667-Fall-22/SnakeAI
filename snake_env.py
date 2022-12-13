@@ -9,14 +9,16 @@ green = pygame.Color(0, 255, 0)
 blue = pygame.Color(0, 0, 255)
 
 class Snake_Env:
-    def __init__(self):
+    def __init__(self,rander=False):
         self.game_size = 10
         self.board = np.zeros((self.game_size,self.game_size))
+        self.generate_fruit()
 
         self.snake_position = [2, 2]
         self.snake_body = [self.snake_position]
 
-        self.game_setup()
+        if rander:
+            self.game_setup()
 
         self.score = 0
 
@@ -49,7 +51,7 @@ class Snake_Env:
         # defining first 1 block of snake body
         self.snake_body = [[]]
 
-        self.generate_fruit()
+
 
         self.direction = 'RIGHT'
         self.change_to = self.direction
@@ -165,6 +167,8 @@ class Snake_Env:
             pygame.quit()
             quit()
 
+        def step()
+
 
     def main(self):
         directions=['UP','LEFT','DOWN','RIGHT']
@@ -191,5 +195,5 @@ class Snake_Env:
 
 
 if __name__ == '__main__':
-    snake = Snake_Env()
+    snake = Snake_Env(True)
     snake.main()
