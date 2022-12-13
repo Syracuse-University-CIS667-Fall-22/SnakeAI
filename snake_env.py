@@ -1,6 +1,5 @@
-import pygame
-import time
-import random
+import os,sys,time,random,pygame
+import numpy as np
 
 # defining colors
 black = pygame.Color(0, 0, 0)
@@ -11,43 +10,56 @@ blue = pygame.Color(0, 0, 255)
 
 class Snake_Env:
     def __init__(self):
-        self.snake_speed = 1
-        self.block_size = 100
+        self.game_size = 10
+        self.board = np.zeros((self.game_size,self.game_size))
+
+        self.snake_position = [2, 2]
+        self.snake_body = [self.snake_position]
+
+        self.game_setup()
+
+        self.score = 0
+
+    def update_board(self):
+        self.board = np.zeros((self.game_size,self.game_size))
+        for i in self.snake_body:
+            self.board[i[0],i[1]] = 1
+
+        self.board[self.fruit_position_good[0],self.fruit_position_good[1]] = 2
+        self.board[self.fruit_position_bad[0],self.fruit_position_bad[1]] = -2
+
+    def game_setup(self):
+        self.fruit_spawn = True
+        self.snake_speed = 5
+        self.window_size = 720
+        self.block_size = self.window_size/self.game_size
 
         # Window size
-        self.window_x = 720
-        self.window_y = 480
+        self.window_x = self.window_size
+        self.window_y = self.window_size
 
         # Initialising pygame
         pygame.init()
-        pygame.display.set_caption('GeeksforGeeks Snakes')
+        pygame.display.set_caption('Snake Game')
         self.game_window = pygame.display.set_mode((self.window_x, self.window_y))
 
         # FPS (frames per second) controller
         self.fps = pygame.time.Clock()
-
-        # defining snake default position
-        self.snake_position = [2*self.block_size, 2*self.block_size]
 
         # defining first 1 block of snake body
         self.snake_body = [[]]
 
         self.generate_fruit()
 
-        self.fruit_spawn = True
-
-        # setting default snake direction towards
-        # right
         self.direction = 'RIGHT'
         self.change_to = self.direction
 
-        # initial score
-        self.score = 0
-
-    def generate_fruit(self):
+    def generate_fruit(self,good_p=None,bad_p=None):
         # fruit position
-        self.fruit_position = [random.randrange(1, (self.window_x//self.block_size)) * self.block_size,
-                               random.randrange(1, (self.window_y//self.block_size)) * self.block_size]
+        self.fruit_position_good = [np.random.randint(1, self.game_size),np.random.randint(1, self.game_size)] if good_p==None else good_p
+        self.fruit_position_bad = [np.random.randint(1, self.game_size),np.random.randint(1, self.game_size)] if bad_p==None else bad_p
+
+        self.fruit_spawn = False
 
 
     # displaying Score function
@@ -61,8 +73,8 @@ class Snake_Env:
     def check_game_over(self):
         over=False
         # Game Over conditions
-        if self.snake_position[0] < 0 or self.snake_position[0] > self.window_x-self.block_size\
-        or self.snake_position[1] < 0 or self.snake_position[1] > self.window_y-self.block_size:
+        if self.snake_position[0] < 0 or self.snake_position[0] > self.game_size\
+        or self.snake_position[1] < 0 or self.snake_position[1] > self.game_size:
             over=True
 
         # Touching the snake body
@@ -70,21 +82,26 @@ class Snake_Env:
             if self.snake_position[0] == block[0] and self.snake_position[1] == block[1]:
                 over=True
 
+        if len(self.snake_body)==0:
+            over =True
+
         return over
 
 
-    def snake_control(self):
-        # handling key events
-        for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
-                    self.change_to = 'UP'
-                if event.key == pygame.K_DOWN:
-                    self.change_to = 'DOWN'
-                if event.key == pygame.K_LEFT:
-                    self.change_to = 'LEFT'
-                if event.key == pygame.K_RIGHT:
-                    self.change_to = 'RIGHT'
+    def snake_control(self,direction=None):
+        def keyboard_input():
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:
+                        return 'UP'
+                    if event.key == pygame.K_DOWN:
+                        return 'DOWN'
+                    if event.key == pygame.K_LEFT:
+                        return 'LEFT'
+                    if event.key == pygame.K_RIGHT:
+                        return 'RIGHT'
+
+        self.change_to = direction if direction!=None else keyboard_input()
 
         # If two keys pressed simultaneously
         # we don't want snake to move into two
@@ -96,8 +113,8 @@ class Snake_Env:
                 self.direction = changeto_list[i]
 
         # Moving the snake
-        dx_list = [0,0,-self.block_size,self.block_size]
-        dy_list = [-self.block_size,self.block_size,0,0]
+        dx_list = [0,0,-1,1]
+        dy_list = [-1,1,0,0]
         for i in range(4):
             if self.direction == changeto_list[i]:
                 self.snake_position[0]+=dx_list[i]
@@ -108,23 +125,31 @@ class Snake_Env:
         # if fruits and snakes collide then scores
         # will be incremented by 10
         self.snake_body.insert(0, list(self.snake_position))
-        if self.snake_position[0] == self.fruit_position[0] and self.snake_position[1] == self.fruit_position[1]:
+        if self.snake_position[0] == self.fruit_position_good[0] and self.snake_position[1] == self.fruit_position_good[1]:
             self.score += 10
-            self.fruit_spawn = False
+            self.fruit_spawn = True
         else:
+            if self.snake_position[0] == self.fruit_position_bad[0] and self.snake_position[1] == self.fruit_position_bad[1]:
+                self.score -= 10
+                self.fruit_spawn = True
+                self.snake_body.pop()
             self.snake_body.pop()
 
-        if not self.fruit_spawn:
+
+        if self.fruit_spawn:
             self.generate_fruit()
 
-        self.fruit_spawn = True
+        self.update_board()
 
     def game_render(self,over):
         self.game_window.fill(black)
 
+        S = self.block_size
+
         for pos in self.snake_body:
-            pygame.draw.rect(self.game_window, green,pygame.Rect(pos[0], pos[1], self.block_size, self.block_size))
-        pygame.draw.rect(self.game_window, white, pygame.Rect(self.fruit_position[0], self.fruit_position[1], self.block_size, self.block_size))
+            pygame.draw.rect(self.game_window, green,pygame.Rect(pos[0]*S, pos[1]*S, S, S))
+        pygame.draw.rect(self.game_window, white, pygame.Rect(self.fruit_position_good[0]*S, self.fruit_position_good[1]*S, S, S))
+        pygame.draw.rect(self.game_window, red, pygame.Rect(self.fruit_position_bad[0]*S, self.fruit_position_bad[1]*S, S, S))
         self.show_score()
         pygame.display.update()
         self.fps.tick(self.snake_speed)
@@ -142,11 +167,23 @@ class Snake_Env:
 
 
     def main(self):
+        directions=['UP','LEFT','DOWN','RIGHT']
+        i=0
         while True:
 
-            self.snake_control()
+            self.snake_control(directions[i])
+            i=i+1
+            i= 0 if i>3 else i
 
             self.game_update()
+            print('snake')
+            print(self.snake_position)
+            print('snake body')
+            print(self.snake_body)
+            print('fruit')
+            print(self.fruit_position_good)
+            print(self.board.T)
+            #input()
 
             over = self.check_game_over()
 
