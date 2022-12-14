@@ -1,12 +1,7 @@
 import os,sys,time,random,pygame
 import numpy as np
 
-# defining colors
-black = pygame.Color(0, 0, 0)
-white = pygame.Color(255, 255, 255)
-red = pygame.Color(255, 0, 0)
-green = pygame.Color(0, 255, 0)
-blue = pygame.Color(0, 0, 255)
+
 
 class Snake_Env:
     def __init__(self,rander=False):
@@ -26,11 +21,19 @@ class Snake_Env:
         self.board = np.zeros((self.game_size,self.game_size))
         for i in self.snake_body:
             self.board[i[0],i[1]] = 1
+        self.board[self.snake_position[0],self.snake_position[1]] = 2
 
-        self.board[self.fruit_position_good[0],self.fruit_position_good[1]] = 2
-        self.board[self.fruit_position_bad[0],self.fruit_position_bad[1]] = -2
+        self.board[self.fruit_position_good[0],self.fruit_position_good[1]] = 10
+        self.board[self.fruit_position_bad[0],self.fruit_position_bad[1]] = -10
 
     def game_setup(self):
+        # defining colors
+        self.black = pygame.Color(0, 0, 0)
+        self.white = pygame.Color(255, 255, 255)
+        self.red = pygame.Color(255, 0, 0)
+        self.green = pygame.Color(0, 255, 0)
+        self.blue = pygame.Color(0, 0, 255)
+
         self.fruit_spawn = True
         self.snake_speed = 5
         self.window_size = 720
@@ -67,7 +70,7 @@ class Snake_Env:
     # displaying Score function
     def show_score(self):
         score_font = pygame.font.SysFont('times new roman', 20)
-        score_surface = score_font.render('Score : ' + str(self.score), True, white)
+        score_surface = score_font.render('Score : ' + str(self.score), True, self.white)
         score_rect = score_surface.get_rect()
         self.game_window.blit(score_surface, score_rect)
 
@@ -144,21 +147,21 @@ class Snake_Env:
         self.update_board()
 
     def game_render(self,over):
-        self.game_window.fill(black)
+        self.game_window.fill(self.black)
 
         S = self.block_size
 
         for pos in self.snake_body:
-            pygame.draw.rect(self.game_window, green,pygame.Rect(pos[0]*S, pos[1]*S, S, S))
-        pygame.draw.rect(self.game_window, white, pygame.Rect(self.fruit_position_good[0]*S, self.fruit_position_good[1]*S, S, S))
-        pygame.draw.rect(self.game_window, red, pygame.Rect(self.fruit_position_bad[0]*S, self.fruit_position_bad[1]*S, S, S))
+            pygame.draw.rect(self.game_window, self.green,pygame.Rect(pos[0]*S, pos[1]*S, S, S))
+        pygame.draw.rect(self.game_window, self.white, pygame.Rect(self.fruit_position_good[0]*S, self.fruit_position_good[1]*S, S, S))
+        pygame.draw.rect(self.game_window, self.red, pygame.Rect(self.fruit_position_bad[0]*S, self.fruit_position_bad[1]*S, S, S))
         self.show_score()
         pygame.display.update()
         self.fps.tick(self.snake_speed)
 
         if over:
             my_font = pygame.font.SysFont('times new roman', 50)
-            game_over_surface = my_font.render('Your Score is : ' + str(self.score), True, red)
+            game_over_surface = my_font.render('Your Score is : ' + str(self.score), True, self.red)
             game_over_rect = game_over_surface.get_rect()
             game_over_rect.midtop = (self.window_x/2, self.window_y/4)
             self.game_window.blit(game_over_surface, game_over_rect)
@@ -167,7 +170,11 @@ class Snake_Env:
             pygame.quit()
             quit()
 
-        def step()
+    def step(self,direction):
+        self.snake_control(direction)
+        self.game_update()
+        over = self.check_game_over()
+        return over,self.board
 
 
     def main(self):
@@ -175,7 +182,8 @@ class Snake_Env:
         i=0
         while True:
 
-            self.snake_control(directions[i])
+            #self.snake_control(directions[i])
+            self.snake_control()
             i=i+1
             i= 0 if i>3 else i
 
