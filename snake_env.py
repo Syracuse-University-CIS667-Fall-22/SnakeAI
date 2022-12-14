@@ -3,7 +3,7 @@ import numpy as np
 
 class Snake_Env:
     def __init__(self,rander=False):
-        self.game_size = 10
+        self.game_size = 30
         self.board = np.zeros((self.game_size,self.game_size))
         self.generate_fruit()
 
@@ -249,6 +249,6 @@ class Snake_Env:
 
 if __name__ == '__main__':
     snake = Snake_Env(True)
-    snake.main()
+    #snake.main()
     #snake.test()
-    #snake.human_play()
+    snake.human_play()
