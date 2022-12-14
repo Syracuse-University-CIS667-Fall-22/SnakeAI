@@ -77,8 +77,8 @@ class Snake_Env:
     def check_game_over(self):
         over=False
         # Game Over conditions
-        if self.snake_position[0] < 0 or self.snake_position[0] > self.game_size\
-        or self.snake_position[1] < 0 or self.snake_position[1] > self.game_size:
+        if self.snake_position[0] < 0 or self.snake_position[0] > self.game_size-1\
+        or self.snake_position[1] < 0 or self.snake_position[1] > self.game_size-1:
             over=True
 
         # Touching the snake body
@@ -143,9 +143,26 @@ class Snake_Env:
         if self.fruit_spawn:
             self.generate_fruit()
 
-        self.update_board()
+        over = self.check_game_over()
+
+        if not over:
+            self.update_board()
+        return over
+
+
 
     def game_render(self,over):
+        if over:
+            my_font = pygame.font.SysFont('times new roman', 50)
+            game_over_surface = my_font.render('Your Score is : ' + str(self.score), True, self.red)
+            game_over_rect = game_over_surface.get_rect()
+            game_over_rect.midtop = (self.window_x/2, self.window_y/4)
+            self.game_window.blit(game_over_surface, game_over_rect)
+            pygame.display.flip()
+            time.sleep(2)
+            pygame.quit()
+            quit()
+
         self.game_window.fill(self.black)
 
         S = self.block_size
@@ -158,31 +175,23 @@ class Snake_Env:
         pygame.display.update()
         self.fps.tick(self.snake_speed)
 
-        if over:
-            my_font = pygame.font.SysFont('times new roman', 50)
-            game_over_surface = my_font.render('Your Score is : ' + str(self.score), True, self.red)
-            game_over_rect = game_over_surface.get_rect()
-            game_over_rect.midtop = (self.window_x/2, self.window_y/4)
-            self.game_window.blit(game_over_surface, game_over_rect)
-            pygame.display.flip()
-            time.sleep(2)
-            pygame.quit()
-            quit()
-
     def step(self,direction):
         self.snake_control(direction)
         self.game_update()
         over = self.check_game_over()
         return over,self.board
 
+    def baseline_ai(self):
 
-    def main(self):
+        return 'RIGHT' # 'UP','LEFT','DOWN','RIGHT'
+
+    def test(self):
         directions=['UP','LEFT','DOWN','RIGHT']
         i=0
         while True:
 
-            #self.snake_control(directions[i])
-            self.snake_control()
+            self.snake_control(directions[i])
+            #self.snake_control()
             i=i+1
             i= 0 if i>3 else i
 
@@ -194,13 +203,52 @@ class Snake_Env:
             print('fruit')
             print(self.fruit_position_good)
             print(self.board.T)
-            input()
 
             over = self.check_game_over()
 
             self.game_render(over)
 
 
+    def main(self):
+        while True:
+
+            direction = self.baseline_ai()
+
+            self.snake_control(direction)
+
+            over = self.game_update()
+            print('snake')
+            print(self.snake_position)
+            print('snake body')
+            print(self.snake_body)
+            print('fruit')
+            print(self.fruit_position_good)
+            print(self.board.T)
+
+            self.game_render(over)
+
+            input()
+
+    def human_play(self):
+        while True:
+
+            self.snake_control()
+
+            over = self.game_update()
+            print('snake')
+            print(self.snake_position)
+            print('snake body')
+            print(self.snake_body)
+            print('fruit')
+            print(self.fruit_position_good)
+            print(self.board.T)
+
+            self.game_render(over)
+
+
+
 if __name__ == '__main__':
     snake = Snake_Env(True)
     snake.main()
+    #snake.test()
+    #snake.human_play()
