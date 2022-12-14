@@ -1,8 +1,6 @@
 import os,sys,time,random,pygame
 import numpy as np
 
-
-
 class Snake_Env:
     def __init__(self,rander=False):
         self.game_size = 10
@@ -25,6 +23,9 @@ class Snake_Env:
 
         self.board[self.fruit_position_good[0],self.fruit_position_good[1]] = 10
         self.board[self.fruit_position_bad[0],self.fruit_position_bad[1]] = -10
+
+    def get_state(self):
+        pass
 
     def game_setup(self):
         # defining colors
@@ -53,8 +54,6 @@ class Snake_Env:
 
         # defining first 1 block of snake body
         self.snake_body = [[]]
-
-
 
         self.direction = 'RIGHT'
         self.change_to = self.direction
@@ -195,7 +194,7 @@ class Snake_Env:
             print('fruit')
             print(self.fruit_position_good)
             print(self.board.T)
-            #input()
+            input()
 
             over = self.check_game_over()
 
