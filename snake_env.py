@@ -4,11 +4,13 @@ import numpy as np
 class Snake_Env:
     def __init__(self,rander=False):
         self.game_size = 10
-        self.fruit_number = [1,1]
+        self.fruit_number = [3,3]
         self.board = np.zeros((self.game_size,self.game_size))
 
         self.snake_position = [2, 2]
         self.snake_body = [self.snake_position]
+
+        self
 
         self.generate_fruit()
 
@@ -39,6 +41,9 @@ class Snake_Env:
         elif self.direction == 'LEFT':
             actions.remove('RIGHT')
         return actions
+
+    def out_of_board(self,point):
+        return True if point[0] < 0 or point[0] > self.game_size-1 or point[1] < 0 or point[1] > self.game_size-1 else False
 
     def get_state(self):
         pass
@@ -79,13 +84,13 @@ class Snake_Env:
 
         for i in range(self.fruit_number[0]):
             tmp = [np.random.randint(1, self.game_size),np.random.randint(1, self.game_size)]
-            while tmp in self.fruit_position_good or tmp in self.fruit_position_bad or tmp == self.snake_position:
+            while tmp in self.fruit_position_good or tmp in self.fruit_position_bad or tmp in self.snake_body:
                 tmp = [np.random.randint(1, self.game_size),np.random.randint(1, self.game_size)]
             self.fruit_position_good.append( tmp if good_p==None else good_p[i])
 
         for i in range(self.fruit_number[1]):
             tmp = [np.random.randint(1, self.game_size),np.random.randint(1, self.game_size)]
-            while tmp in self.fruit_position_good or tmp in self.fruit_position_bad or tmp == self.snake_position:
+            while tmp in self.fruit_position_good or tmp in self.fruit_position_bad or tmp in self.snake_body:
                 tmp = [np.random.randint(1, self.game_size),np.random.randint(1, self.game_size)]
             self.fruit_position_bad.append(tmp if bad_p==None else bad_p[i])
 
@@ -101,8 +106,7 @@ class Snake_Env:
     def check_game_over(self):
         over=False
         # Game Over conditions
-        if self.snake_position[0] < 0 or self.snake_position[0] > self.game_size-1\
-        or self.snake_position[1] < 0 or self.snake_position[1] > self.game_size-1:
+        if self.out_of_board(self.snake_position):
             over=True
 
         # Touching the snake body
@@ -152,7 +156,7 @@ class Snake_Env:
             remove_list = []
             for i in range(len(self.fruit_position_good)):
                 if self.snake_position[0] == self.fruit_position_good[i][0] and self.snake_position[1] == self.fruit_position_good[i][1]:
-                    self.score += 10
+                    self.score += self.game_size*2
                     remove_list.append(i)
                     yes = True
             for i in range(len(remove_list)):
@@ -164,7 +168,7 @@ class Snake_Env:
             remove_list = []
             for i in range(len(self.fruit_position_bad)):
                 if self.snake_position[0] == self.fruit_position_bad[i][0] and self.snake_position[1] == self.fruit_position_bad[i][1]:
-                    self.score -= 10
+                    self.score -= self.game_size*2
                     remove_list.append(i)
                     self.snake_body.pop()
                     yes = True
@@ -183,10 +187,10 @@ class Snake_Env:
         if len(self.fruit_position_good) == 0 or len(self.fruit_position_bad) == 0:
             self.generate_fruit()
 
-
         over = self.check_game_over()
 
         if not over:
+            self.score -= 1
             self.update_board()
         return over
 
@@ -227,12 +231,21 @@ class Snake_Env:
             return abs(position[0]-self.fruit_position_good[0][0])+abs(position[1]-self.fruit_position_good[0][1])
         actions = self.valid_actions()
 
-        actions_cost = []
+        actions_point = []
         for action in actions:
             dx,dy = self.move_tf(action)
             x = self.snake_position[0] + dx
             y = self.snake_position[1] + dy
-            actions_cost.append(distance([x,y]))
+            actions_point.append([x,y])
+
+        actions_cost = []
+        for point in actions_point:
+            cost = distance(point)
+            if point in self.snake_body  or self.out_of_board(point):
+                cost += self.game_size*10
+            if point in self.fruit_position_bad:
+                cost += self.game_size*2
+            actions_cost.append(cost)
         idx = actions_cost.index(min(actions_cost))
         direction = actions[idx]
 
