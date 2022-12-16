@@ -3,12 +3,14 @@ import numpy as np
 
 class Snake_Env:
     def __init__(self,rander=False):
-        self.game_size = 30
+        self.game_size = 10
+        self.fruit_number = [1,1]
         self.board = np.zeros((self.game_size,self.game_size))
-        self.generate_fruit()
 
         self.snake_position = [2, 2]
         self.snake_body = [self.snake_position]
+
+        self.generate_fruit()
 
         if rander:
             self.game_setup()
@@ -21,8 +23,22 @@ class Snake_Env:
             self.board[i[0],i[1]] = 1
         self.board[self.snake_position[0],self.snake_position[1]] = 2
 
-        self.board[self.fruit_position_good[0],self.fruit_position_good[1]] = 10
-        self.board[self.fruit_position_bad[0],self.fruit_position_bad[1]] = -10
+        for i in range(len(self.fruit_position_good)):
+            self.board[self.fruit_position_good[i][0],self.fruit_position_good[i][1]] = 10
+        for i in range(len(self.fruit_position_bad)):
+            self.board[self.fruit_position_bad[i][0],self.fruit_position_bad[i][1]] = -10
+
+    def valid_actions(self):
+        actions = ['UP','DOWN','LEFT','RIGHT']
+        if self.direction == 'UP':
+            actions.remove('DOWN')
+        elif self.direction == 'DOWN':
+            actions.remove('UP')
+        elif self.direction == 'RIGHT':
+            actions.remove('LEFT')
+        elif self.direction == 'LEFT':
+            actions.remove('RIGHT')
+        return actions
 
     def get_state(self):
         pass
@@ -35,7 +51,6 @@ class Snake_Env:
         self.green = pygame.Color(0, 255, 0)
         self.blue = pygame.Color(0, 0, 255)
 
-        self.fruit_spawn = True
         self.snake_speed = 5
         self.window_size = 720
         self.block_size = self.window_size/self.game_size
@@ -56,14 +71,23 @@ class Snake_Env:
         self.snake_body = [[]]
 
         self.direction = 'RIGHT'
-        self.change_to = self.direction
 
     def generate_fruit(self,good_p=None,bad_p=None):
         # fruit position
-        self.fruit_position_good = [np.random.randint(1, self.game_size),np.random.randint(1, self.game_size)] if good_p==None else good_p
-        self.fruit_position_bad = [np.random.randint(1, self.game_size),np.random.randint(1, self.game_size)] if bad_p==None else bad_p
+        self.fruit_position_good = []
+        self.fruit_position_bad = []
 
-        self.fruit_spawn = False
+        for i in range(self.fruit_number[0]):
+            tmp = [np.random.randint(1, self.game_size),np.random.randint(1, self.game_size)]
+            while tmp in self.fruit_position_good or tmp in self.fruit_position_bad or tmp == self.snake_position:
+                tmp = [np.random.randint(1, self.game_size),np.random.randint(1, self.game_size)]
+            self.fruit_position_good.append( tmp if good_p==None else good_p[i])
+
+        for i in range(self.fruit_number[1]):
+            tmp = [np.random.randint(1, self.game_size),np.random.randint(1, self.game_size)]
+            while tmp in self.fruit_position_good or tmp in self.fruit_position_bad or tmp == self.snake_position:
+                tmp = [np.random.randint(1, self.game_size),np.random.randint(1, self.game_size)]
+            self.fruit_position_bad.append(tmp if bad_p==None else bad_p[i])
 
 
     # displaying Score function
@@ -91,6 +115,14 @@ class Snake_Env:
 
         return over
 
+    def move_tf(self,direction):
+        changeto_list = ['UP','DOWN','LEFT','RIGHT']
+        dx_list = [0,0,-1,1]
+        dy_list = [-1,1,0,0]
+        for i in range(4):
+            if direction == changeto_list[i]:
+                return dx_list[i],dy_list[i]
+
 
     def snake_control(self,direction=None):
         def keyboard_input():
@@ -105,51 +137,58 @@ class Snake_Env:
                     if event.key == pygame.K_RIGHT:
                         return 'RIGHT'
 
-        self.change_to = direction if direction!=None else keyboard_input()
+        actions = self.valid_actions()
+        change_to = direction if direction!=None else keyboard_input()
+        if change_to in actions:
+            self.direction = change_to
 
-        # If two keys pressed simultaneously
-        # we don't want snake to move into two
-        # directions simultaneously
-        changeto_list = ['UP','DOWN','LEFT','RIGHT']
-        direction_list = ['DOWN','UP','RIGHT','LEFT']
-        for i in range(4):
-            if self.change_to == changeto_list[i] and self.direction != direction_list[i]:
-                self.direction = changeto_list[i]
-
-        # Moving the snake
-        dx_list = [0,0,-1,1]
-        dy_list = [-1,1,0,0]
-        for i in range(4):
-            if self.direction == changeto_list[i]:
-                self.snake_position[0]+=dx_list[i]
-                self.snake_position[1]+=dy_list[i]
+        dx,dy = self.move_tf(self.direction)
+        self.snake_position[0] += dx
+        self.snake_position[1] += dy
 
     def game_update(self):
+        def get_good_fruit():
+            yes = False
+            remove_list = []
+            for i in range(len(self.fruit_position_good)):
+                if self.snake_position[0] == self.fruit_position_good[i][0] and self.snake_position[1] == self.fruit_position_good[i][1]:
+                    self.score += 10
+                    remove_list.append(i)
+                    yes = True
+            for i in range(len(remove_list)):
+                self.fruit_position_good.pop(remove_list[i])
+            return yes
+
+        def get_bad_fruit():
+            yes = False
+            remove_list = []
+            for i in range(len(self.fruit_position_bad)):
+                if self.snake_position[0] == self.fruit_position_bad[i][0] and self.snake_position[1] == self.fruit_position_bad[i][1]:
+                    self.score -= 10
+                    remove_list.append(i)
+                    self.snake_body.pop()
+                    yes = True
+            for i in range(len(remove_list)):
+                self.fruit_position_bad.pop(remove_list[i])
+            return yes
+
         # Snake body growing mechanism
         # if fruits and snakes collide then scores
         # will be incremented by 10
         self.snake_body.insert(0, list(self.snake_position))
-        if self.snake_position[0] == self.fruit_position_good[0] and self.snake_position[1] == self.fruit_position_good[1]:
-            self.score += 10
-            self.fruit_spawn = True
-        else:
-            if self.snake_position[0] == self.fruit_position_bad[0] and self.snake_position[1] == self.fruit_position_bad[1]:
-                self.score -= 10
-                self.fruit_spawn = True
-                self.snake_body.pop()
+        if not get_good_fruit():
+            get_bad_fruit()
             self.snake_body.pop()
 
-
-        if self.fruit_spawn:
+        if len(self.fruit_position_good) == 0 or len(self.fruit_position_bad) == 0:
             self.generate_fruit()
+
 
         over = self.check_game_over()
 
         if not over:
             self.update_board()
         return over
-
-
 
     def game_render(self,over):
         if over:
@@ -169,8 +208,10 @@ class Snake_Env:
 
         for pos in self.snake_body:
             pygame.draw.rect(self.game_window, self.green,pygame.Rect(pos[0]*S, pos[1]*S, S, S))
-        pygame.draw.rect(self.game_window, self.white, pygame.Rect(self.fruit_position_good[0]*S, self.fruit_position_good[1]*S, S, S))
-        pygame.draw.rect(self.game_window, self.red, pygame.Rect(self.fruit_position_bad[0]*S, self.fruit_position_bad[1]*S, S, S))
+        for i in range(len(self.fruit_position_good)):
+            pygame.draw.rect(self.game_window, self.white, pygame.Rect(self.fruit_position_good[i][0]*S, self.fruit_position_good[i][1]*S, S, S))
+        for i in range(len(self.fruit_position_bad)):
+            pygame.draw.rect(self.game_window, self.red, pygame.Rect(self.fruit_position_bad[i][0]*S, self.fruit_position_bad[i][1]*S, S, S))
         self.show_score()
         pygame.display.update()
         self.fps.tick(self.snake_speed)
@@ -181,74 +222,44 @@ class Snake_Env:
         over = self.check_game_over()
         return over,self.board
 
+    def simple_heuristic(self):
+        def distance(position):
+            return abs(position[0]-self.fruit_position_good[0][0])+abs(position[1]-self.fruit_position_good[0][1])
+        actions = self.valid_actions()
+
+        actions_cost = []
+        for action in actions:
+            dx,dy = self.move_tf(action)
+            x = self.snake_position[0] + dx
+            y = self.snake_position[1] + dy
+            actions_cost.append(distance([x,y]))
+        idx = actions_cost.index(min(actions_cost))
+        direction = actions[idx]
+
+        return direction
+
     def baseline_ai(self):
-
-        return 'RIGHT' # 'UP','LEFT','DOWN','RIGHT'
-
-    def test(self):
-        directions=['UP','LEFT','DOWN','RIGHT']
-        i=0
         while True:
 
-            self.snake_control(directions[i])
-            #self.snake_control()
-            i=i+1
-            i= 0 if i>3 else i
-
-            self.game_update()
-            print('snake')
-            print(self.snake_position)
-            print('snake body')
-            print(self.snake_body)
-            print('fruit')
-            print(self.fruit_position_good)
-            print(self.board.T)
-
-            over = self.check_game_over()
-
-            self.game_render(over)
-
-
-    def main(self):
-        while True:
-
-            direction = self.baseline_ai()
+            direction = self.simple_heuristic()
 
             self.snake_control(direction)
 
             over = self.game_update()
-            print('snake')
-            print(self.snake_position)
-            print('snake body')
-            print(self.snake_body)
-            print('fruit')
-            print(self.fruit_position_good)
-            print(self.board.T)
 
             self.game_render(over)
 
-            input()
+            #input()
 
     def human_play(self):
         while True:
-
             self.snake_control()
-
             over = self.game_update()
-            print('snake')
-            print(self.snake_position)
-            print('snake body')
-            print(self.snake_body)
-            print('fruit')
-            print(self.fruit_position_good)
-            print(self.board.T)
-
             self.game_render(over)
 
 
 
 if __name__ == '__main__':
     snake = Snake_Env(True)
-    #snake.main()
-    #snake.test()
-    snake.human_play()
+    snake.baseline_ai()
+    #snake.human_play()
