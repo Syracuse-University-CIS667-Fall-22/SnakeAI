@@ -31,12 +31,12 @@ def pad_all(nums: list) -> list:
 # The number at index p should be the -1 if p is snake -1's body, -2 if p is snake 1's head
 # The number at index p should be the 1 if p is good fruit, 2 if p is bad fruit
 
-def initial_state() -> tuple:
-    board_size = 10
+def initial_state(board_size) -> tuple:
+
     snake1_index = [[3,3],[3,4],[3,5]]
     temp = board_size - 3
     snake2_index = [[temp,temp],[temp,temp-1],[temp,temp-2]]
-    board = np.zeros((board_size,board_size))
+    board = np.zeros((board_size,board_size), dtype = np.int8)
     for i in snake1_index:
         board[i[0],i[1]] = 1
 
@@ -47,12 +47,14 @@ def initial_state() -> tuple:
         board[i[0],i[1]] = -1
     board[snake2_index[0][0],snake2_index[0][1]] = -2
 
-    fruit_number = 7
+    fruit_number = round(board_size*board_size / 3)
+
     good_fruits=[]
+
 
     for i in range(fruit_number):
 
-       generateddata=[random.randint(0,9),random.randint(0,9)]
+       generateddata=[random.randint(0,board_size-1),random.randint(0,board_size-1)]
 
        if not generateddata in good_fruits:
            good_fruits.append(generateddata)
@@ -63,9 +65,10 @@ def initial_state() -> tuple:
             board[good_fruits[i][0],good_fruits[i][1]] = 5
 
     bad_fruits=[]
+    fruit_number = round(board_size*board_size / 8)
     for i in range(fruit_number):
 
-       generateddata=[random.randint(0,9),random.randint(0,9)]
+       generateddata=[random.randint(0,board_size-1),random.randint(0,board_size-1)]
 
        if not generateddata in bad_fruits:
            bad_fruits.append(generateddata)
@@ -86,11 +89,11 @@ def initial_state() -> tuple:
 def game_over(state: tuple) -> bool:
     result = True
     player, board, snake1_index,snake2_index = state
-    board_size = 10
+    board_size = np.size(board,0)
     for i in range(0, board_size):
         for j in range(0, board_size):
 
-            if board[i][j] == 5 or board[i][j] == -5:
+            if board[i][j] == 5:
                 result = False
 
     return result
@@ -104,21 +107,23 @@ def game_over(state: tuple) -> bool:
 # Your code should not modify the board list.
 def valid_actions(state: tuple) -> list:
     player, board ,snake1_index,snake2_index= state
-    board_size = 10
+    board_size = np.size(board,0)
     if player == 0:
         head = snake1_index[0]
-        possible_positions = [[head[0]+1,head[1]],[head[0]-1,head[1]],[head[0],head[1]+1],[head[0],head[1]-1]]
-        actions = []
-        for i in possible_positions:
+        # possible_positions = [[head[0]+1,head[1]],[head[0]-1,head[1]],[head[0],head[1]+1],[head[0],head[1]-1]]
+        possible_positions = {"up":[head[0]-1,head[1]] , "down":[head[0]+1,head[1]],"left":[head[0],head[1]-1],"right":[head[0],head[1]+1]}
+        actions = {}
+        for key,i in possible_positions.items():
             if (i[0] >=0 and i[0]< board_size and i[1] >=0 and i[1]< board_size and board[i[0],i[1]] != 1 and board[i[0],i[1]] != -1 and board[i[0],i[1]] != 2 and board[i[0],i[1]] != -2 ):
-                actions.append(i)
+                actions[key] = i
+
     if player == 1:
         head = snake2_index[0]
-        possible_positions = [[head[0]+1,head[1]],[head[0]-1,head[1]],[head[0],head[1]+1],[head[0],head[1]-1]]
-        actions = []
-        for i in possible_positions:
+        possible_positions = {"up":[head[0]-1,head[1]] , "down":[head[0]+1,head[1]],"left":[head[0],head[1]-1],"right":[head[0],head[1]+1]}
+        actions = {}
+        for key,i in possible_positions.items():
             if (i[0] >=0 and i[0]< board_size and i[1] >=0 and i[1]< board_size and board[i[0],i[1]] != 1 and board[i[0],i[1]] != -1 and board[i[0],i[1]] != 2 and board[i[0],i[1]] != -2 ):
-                actions.append(i)
+                actions[key] = i
 
 
 
@@ -238,21 +243,21 @@ def play_turn(player,snake1_index,snake2_index, move: list, board: list) -> tupl
             head = snake2_index[0]
             snake2_index.insert(0,move)
             tail = snake2_index.pop()
-            board[move[0],move[1]] = 2
-            board[head[0],head[1]] = 1
+            board[move[0],move[1]] = -2
+            board[head[0],head[1]] = -1
             board[tail[0],tail[1]] = 0
         elif(board[move[0],move[1]] == 5):
             head = snake2_index[0]
             snake2_index.insert(0,move)
-            board[move[0],move[1]] = 2
-            board[head[0],head[1]] = 1
+            board[move[0],move[1]] = -2
+            board[head[0],head[1]] = -1
         elif(board[move[0],move[1]] == -5):
             head = snake2_index[0]
             if(len(snake2_index) == 2):
                 snake2_index.insert(0,move)
                 snake2_index.pop()
                 snake2_index.pop()
-                board[move[0],move[1]] = 2
+                board[move[0],move[1]] = -2
                 board[head[0],head[1]] = 0
             elif(len(snake2_index) == 1):
                 snake2_index.pop()
@@ -262,8 +267,8 @@ def play_turn(player,snake1_index,snake2_index, move: list, board: list) -> tupl
                 snake2_index.insert(0,move)
                 tail1 = snake2_index.pop()
                 tail2 = snake2_index.pop()
-                board[move[0],move[1]] = 2
-                board[head[0],head[1]] = 1
+                board[move[0],move[1]] = -2
+                board[head[0],head[1]] = -1
                 board[tail1[0],tail1[1]] = 0
                 board[tail2[0],tail2[1]] = 0
     new_player = 1 - player
@@ -276,8 +281,12 @@ def play_turn(player,snake1_index,snake2_index, move: list, board: list) -> tupl
 # Plays a turn and clears pits if needed.
 def perform_action(action, state):
     player, board , snake1_index, snake2_index= state
+    # temp = action.values()
+    # print(temp)
+    # action = temp[0]
     new_player, new_board , snake1_index, snake2_index = play_turn(player, snake1_index,snake2_index, action , board)
-    return new_player, new_board
+    new_state = (new_player, new_board,snake1_index,snake2_index)
+    return new_state
 
 # TODO: implement score_in(state)
 # state is a (player, board) tuple
