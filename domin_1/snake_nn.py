@@ -17,6 +17,38 @@ class Snake_NN(nn.Module):
             #nn.ReLU(),
             nn.Linear(512, 4)
         )
+        self.layer1 = nn.Sequential(
+            nn.Conv2d(4, 16, kernel_size=3, stride=4, padding=1),
+            nn.BatchNorm2d(96),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size = 3, stride = 2))
+        self.layer2 = nn.Sequential(
+            nn.Conv2d(16, 64, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size = 3, stride = 2))
+        self.layer3 = nn.Sequential(
+            nn.Conv2d(64, 96, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(384),
+            nn.ReLU())
+        self.layer4 = nn.Sequential(
+            nn.Conv2d(96, 32, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size = 3, stride = 2))
+        self.fc = nn.Sequential(
+            nn.Dropout(0.5),
+            nn.Linear(9216, 4096),
+            nn.ReLU())
+        self.fc1 = nn.Sequential(
+            nn.Dropout(0.5),
+            nn.Linear(4096, 4096),
+            nn.ReLU())
+        self.fc2= nn.Sequential(
+            nn.Linear(4096, 4))
+
+
+
         self.data = np.load('training_data.npy',allow_pickle=True)
         self.training_data = self.data[0:int(len(self.data)*0.8)]
         self.testing_data = self.data[int(len(self.data)*0.8):]
@@ -25,6 +57,7 @@ class Snake_NN(nn.Module):
         self.optimizer = torch.optim.SGD(self.parameters(), lr=1e-3)
         self.loss_list = []
 
+
     def save(self):
         torch.save(self.state_dict(), 'model.pt')
 
@@ -32,9 +65,21 @@ class Snake_NN(nn.Module):
         self.load_state_dict(torch.load('model.pt'))
 
     def forward(self, x):
-        x = self.flatten(x)
-        logits = self.linear_relu_stack(x)
-        return logits
+        # x = self.flatten(x)
+        # logits = self.linear_relu_stack(x)
+        out = self.layer1(x)
+        out = self.layer2(out)
+        out = self.layer3(out)
+        out = self.layer4(out)
+        out = out.reshape(out.size(0), -1)
+        print(out.shape)
+        exit()
+        out = self.fc(out)
+        out = self.fc1(out)
+        out = self.fc2(out)
+
+
+        return out
 
     def train_model(self):
         self.train()
