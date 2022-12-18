@@ -5,9 +5,7 @@ In this study, there are two different fruits in addition to the food in a class
 
 References
 
-[1] Shubham Sharma, Saurabh Mishra, Nachiket Deodhar, Akshay Katageri, and Parth Sagar. Solving the classic snake game using ai. In2019 IEEE Pune Section International Conference (PuneCon), pages 1–4. IEEE,2019.
-
-[2] https://www.youtube.com/playlist?list=PLqnslRFeH2UrDh7vUmJ60YrmWd64mTTKV
+[1] https://www.youtube.com/playlist?list=PLqnslRFeH2UrDh7vUmJ60YrmWd64mTTKV
 
 States:
 Food is above the snake
