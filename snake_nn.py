@@ -142,9 +142,9 @@ class Snake_NN(nn.Module):
 
 if __name__ == '__main__':
     snake_nn = Snake_NN()
-    #for i in range(5):
-    #    snake_nn.train_model()
-    #    snake_nn.plot_loss()
+    for i in range(5):
+       snake_nn.train_model()
+       # snake_nn.plot_loss()
 
     #snake_nn.save()
     snake_nn.load()
