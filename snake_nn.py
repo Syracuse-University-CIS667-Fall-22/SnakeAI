@@ -119,7 +119,7 @@ class Snake_NN(nn.Module):
         train_dataloader = torch.utils.data.DataLoader(training_set, batch_size=64, shuffle=True)
         test_set = CustomDataset(training_data = self.testing_data )
         test_dataloader = torch.utils.data.DataLoader(test_set, batch_size=64, shuffle=True)
-
+        best_accuracy = 0
 
 
         # exit()
@@ -163,6 +163,13 @@ class Snake_NN(nn.Module):
 
             test_loss /= total
             correct /= total
+            if(correct > best_accuracy):
+                best_accuracy = correct
+                # torch.save(self.state_dict(), 'checkpoint_{}.pt'.format(i+1))
+
+                if(best_accuracy > 0.8):
+                    torch.save(self.state_dict(), 'checkpoint_{}.pt'.format(i+1))
+
             print('Epoch:', i, " fininshed")
             print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
 
