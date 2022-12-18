@@ -10,10 +10,10 @@ from snake_nn import Snake_NN
 class Parameters:
     def __init__(self):
         self.game_size = 10
-        self.fruit_number = [np.random.randint(1,25),np.random.randint(1,25)]
+        self.fruit_number = [np.random.randint(1,4),np.random.randint(1,4)]
         self.round = 1
 
-        self.snake_position = [2, 2]
+        self.snake_position = [np.random.randint(self.game_size), np.random.randint(self.game_size)]
         self.direction = 'RIGHT'
         self.random = False
 
@@ -314,7 +314,9 @@ class Snake_Env:
         node_count = 0
         result = None
         while len(frontier)!=0:
-            print(len(frontier))
+            if len(frontier)>1000:
+                break
+            #print(len(frontier))
             node = frontier.pop()
             node_count+=1
             node_copy = copy.deepcopy([node])[0]
@@ -402,119 +404,6 @@ class Snake_Env:
 
         return self.state.over
 
-def mode_1():
-    p = Parameters()
-    snake_rander = Snake_Rander(p)
-    snake_ai = Snake_Env(p)
-    snake_human = Snake_Env(p)
-    snake_rander.game_render(snake_ai.state,snake_human.state)
-    input()
-    over_1 = False
-    over_2 = False
-    while True:
-        if not over_1:
-            over_1 = snake_ai.baseline_ai()
-            snake_rander.game_render(snake_ai.state,snake_human.state)
-        if not over_2:
-            over_2 = snake_human.human_play()
-            snake_rander.game_render(snake_ai.state,snake_human.state)
-        if over_1 and over_2:
-            break
-
-def mode_2():
-    p = Parameters()
-    snake_rander = Snake_Rander(p,2)
-    snake_ai = Snake_Env(p)
-    snake_rander.game_render(snake_ai.state)
-    input()
-    over_1 = False
-    while True:
-        if not over_1:
-            over_1 = snake_ai.baseline_ai()
-            snake_rander.game_render(snake_ai.state)
-        if over_1:
-            break
-
-def generate_training_data():
-    data_list = []
-    for i in range(1000):
-        print(i)
-        p = Parameters()
-        snake_ai = Snake_Env(p)
-        snake_ai.state.print_state()
-        action_list = snake_ai.a_start_search(snake_ai.state)
-        if len(action_list)==1:
-            continue
-        print('done')
-        for action in action_list[1:]:
-            data = snake_ai.state.one_hot_encoding()
-            data_list.append([data,action])
-            snake_ai.state = snake_ai.step(snake_ai.state,action)
-    np.save('training_data.npy',np.array(data_list,dtype=object))
-
-def NN_model():
-    snake_nn = Snake_NN()
-    snake_nn.load()
-
-    p = Parameters()
-    snake_rander = Snake_Rander(p,2)
-    snake_ai = Snake_Env(p)
-    snake_rander.game_render(snake_ai.state)
-    input()
-    over = False
-    action = ['UP','DOWN','LEFT','RIGHT']
-    while True:
-        snake_ai.state.print_state()
-
-        data = torch.from_numpy(snake_ai.state.one_hot_encoding())
-        data = data.to(torch.float32)
-
-        pre = snake_nn(data)
-        index = pre.argmax(0)
-        direction = action[index]
-
-        print('next action: %s'%direction)
-
-        #input()
-
-        snake_ai.state = snake_ai.step(snake_ai.state,direction)
-        snake_rander.game_render(snake_ai.state)
-
-        if snake_ai.state.over:
-            break
-
-def test():
-    data_list = []
-    for i in range(1000):
-        print(i)
-        p = Parameters()
-        #snake_rander = Snake_Rander(p,2)
-        snake_ai = Snake_Env(p)
-        #snake_rander.game_render(snake_ai.state)
-        snake_ai.state.print_state()
-        #data = snake_ai.state.one_hot_encoding()
-        #action_list = snake_ai.breadth_first_search(snake_ai.state)
-        action_list = snake_ai.a_start_search(snake_ai.state)
-        if len(action_list)==1:
-            continue
-        print('done')
-        #input()
-        for action in action_list[1:]:
-            data = snake_ai.state.one_hot_encoding()
-            data_list.append([data,action])
-            snake_ai.state = snake_ai.step(snake_ai.state,action)
-            #snake_rander.game_render(snake_ai.state)
-        #input()
-    np.save('training_data.npy',np.array(data_list,dtype=object))
-
-
-def play():
-    mode_2()
-    print('Press x to exit')
-    key = input()
-    while key !='x':
-        print('Press x to exit')
-        key = input()
 
 if __name__ == '__main__':
     #test()
