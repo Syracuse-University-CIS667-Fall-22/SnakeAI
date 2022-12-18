@@ -93,8 +93,11 @@ class Snake_NN(nn.Module):
     def save(self):
         torch.save(self.state_dict(), 'model.pt')
 
-    def load(self):
-        self.load_state_dict(torch.load('model.pt'))
+    def load(self,name=None):
+        if name ==None:
+            self.load_state_dict(torch.load('model.pt'))
+        else:
+            self.load_state_dict(torch.load('%s.pt'%name))
 
     def forward(self, x):
         # x = self.flatten(x)

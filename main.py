@@ -4,9 +4,43 @@ import numpy as np
 import heapq as hq
 from collections import deque
 
-from snake_env import Parameters,Snake_Env,State
+from snake_env import Snake_Env,State
 from snake_rander import Snake_Rander
 from snake_nn import Snake_NN
+
+class Parameters:
+    def __init__(self):
+        self.game_size = 10
+        self.fruit_size = int(self.game_size*self.game_size/4)
+        self.fruit_number = [np.random.randint(1,self.fruit_size),np.random.randint(1,self.fruit_size)]
+        #self.fruit_number = [4,2]
+        self.round = 1
+
+        self.snake_position = [np.random.randint(self.game_size), np.random.randint(self.game_size)]
+        self.direction = 'RIGHT'
+        self.random = False
+
+        self.generate_fruit()
+
+    def generate_fruit(self):
+        self.fruit_list = []
+        for i in range(self.round):
+            self.fruit_position_good = []
+            self.fruit_position_bad = []
+
+            for i in range(self.fruit_number[0]):
+                tmp = [np.random.randint(1, self.game_size),np.random.randint(1, self.game_size)]
+                while tmp in self.fruit_position_good or tmp in self.fruit_position_bad or tmp == self.snake_position:
+                    tmp = [np.random.randint(1, self.game_size),np.random.randint(1, self.game_size)]
+                self.fruit_position_good.append(tmp)
+
+            for i in range(self.fruit_number[1]):
+                tmp = [np.random.randint(1, self.game_size),np.random.randint(1, self.game_size)]
+                while tmp in self.fruit_position_good or tmp in self.fruit_position_bad or tmp == self.snake_position:
+                    tmp = [np.random.randint(1, self.game_size),np.random.randint(1, self.game_size)]
+                self.fruit_position_bad.append(tmp)
+            self.fruit_list.append([self.fruit_position_good,self.fruit_position_bad])
+        #self.fruit_list=[[[[1, 1]], []]]
 
 
 # For the NN training_data
@@ -29,7 +63,7 @@ def generate_training_data():
 
 def NN_play():
     snake_nn = Snake_NN()
-    snake_nn.load()
+    snake_nn.load('checkpoint_79')
 
     p = Parameters()
     snake_rander = Snake_Rander(p,2)
@@ -43,8 +77,10 @@ def NN_play():
 
         data = torch.from_numpy(snake_ai.state.one_hot_encoding())
         data = data.to(torch.float32)
+        data = data[None,]
 
         pre = snake_nn(data)
+        pre = pre[0]
         index = pre.argmax(0)
         direction = action[index]
 
@@ -91,7 +127,7 @@ def play_a_star_ai():
     snake_ai = Snake_Env(p)
     snake_rander.game_render(snake_ai.state)
     snake_ai.state.print_state()
-    action_list = snake_ai.a_start_search(snake_ai.state)
+    action_list,node_count = snake_ai.a_start_search(snake_ai.state)
     print('done')
     print(action_list)
     input()
@@ -107,7 +143,7 @@ def play_bfs_ai():
     snake_ai = Snake_Env(p)
     snake_rander.game_render(snake_ai.state)
     snake_ai.state.print_state()
-    action_list = snake_ai.breadth_first_search(snake_ai.state)
+    action_list,node_count = snake_ai.breadth_first_search(snake_ai.state)
     print('done')
     print(action_list)
     input()
@@ -117,7 +153,43 @@ def play_bfs_ai():
 
     wait_for_end()
 
+def baseline_ai_vs_a_star_experment():
+    baseline_ai_score = []
+    a_star_score = []
+    a_star_node = []
+    for i in range(100):
+        print(i)
+        p = Parameters()
+        baseline_ai = Snake_Env(p)
+        a_star_ai = Snake_Env(p)
+        action_list,node_count = a_star_ai.a_start_search(a_star_ai.state)
+        a_star_node.append(node_count)
+
+        step = 0
+
+        while(not baseline_ai.state.over):
+            step+=1
+            direction = baseline_ai.simple_heuristic(baseline_ai.state)
+            baseline_ai.state = baseline_ai.step(baseline_ai.state,direction)
+            if step>1000:
+                break
+        baseline_ai_score.append(baseline_ai.state.score)
+
+        for action in action_list[1:]:
+            a_star_ai.state = a_star_ai.step(a_star_ai.state,action)
+        a_star_score.append(a_star_ai.state.score)
+    print('baseline_ai_score')
+    print(baseline_ai_score)
+    print('a_star_score')
+    print(a_star_score)
+    print('a_star_node')
+    print(a_star_node)
+
+
+
 if __name__ == '__main__':
-    #play_with_baseline_ai()
-    play_a_star_ai()
+    play_with_baseline_ai()
     #play_bfs_ai()
+    #play_a_star_ai()
+    #NN_play()
+    #baseline_ai_vs_a_star_experment()

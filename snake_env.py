@@ -4,40 +4,9 @@ import numpy as np
 import heapq as hq
 from collections import deque
 
+#from main import Parameters
 from snake_rander import Snake_Rander
 from snake_nn import Snake_NN
-
-class Parameters:
-    def __init__(self):
-        self.game_size = 10
-        self.fruit_number = [np.random.randint(1,4),np.random.randint(1,4)]
-        self.round = 1
-
-        self.snake_position = [np.random.randint(self.game_size), np.random.randint(self.game_size)]
-        self.direction = 'RIGHT'
-        self.random = False
-
-        self.generate_fruit()
-
-    def generate_fruit(self):
-        self.fruit_list = []
-        for i in range(self.round):
-            self.fruit_position_good = []
-            self.fruit_position_bad = []
-
-            for i in range(self.fruit_number[0]):
-                tmp = [np.random.randint(1, self.game_size),np.random.randint(1, self.game_size)]
-                while tmp in self.fruit_position_good or tmp in self.fruit_position_bad or tmp == self.snake_position:
-                    tmp = [np.random.randint(1, self.game_size),np.random.randint(1, self.game_size)]
-                self.fruit_position_good.append(tmp)
-
-            for i in range(self.fruit_number[1]):
-                tmp = [np.random.randint(1, self.game_size),np.random.randint(1, self.game_size)]
-                while tmp in self.fruit_position_good or tmp in self.fruit_position_bad or tmp == self.snake_position:
-                    tmp = [np.random.randint(1, self.game_size),np.random.randint(1, self.game_size)]
-                self.fruit_position_bad.append(tmp)
-            self.fruit_list.append([self.fruit_position_good,self.fruit_position_bad])
-        #self.fruit_list=[[[[1, 1]], []]]
 
 class State:
     def __init__(self,p):
@@ -314,7 +283,7 @@ class Snake_Env:
         node_count = 0
         result = None
         while len(frontier)!=0:
-            if len(frontier)>1000:
+            if node_count>5000:
                 break
             #print(len(frontier))
             node = frontier.pop()
@@ -330,14 +299,14 @@ class Snake_Env:
             for action in node.valid_actions:
                 node_copy = copy.deepcopy([node])[0]
                 tmp = self.step(node_copy,action)
-                if (not tmp.over or (tmp.over and tmp.round_end())) and not tmp.round_fail():
+                if not tmp.over or (tmp.over and tmp.round_end()):
                     child_list.append(tmp)
 
             for child in child_list:
                 if child in explored: continue
                 frontier.append(child)
 
-        return result.action_list
+        return result.action_list,node_count
 
     def a_start_search(self,state):
         frontier = []
@@ -346,7 +315,7 @@ class Snake_Env:
         node_count = 0
         result = state
         while len(frontier)!=0:
-            if len(frontier)>1000:
+            if node_count>5000:
                 break
             #print(len(frontier))
             node = frontier.pop()
@@ -370,7 +339,7 @@ class Snake_Env:
                 frontier.append(child)
             frontier.sort(key=lambda x: x.score)
 
-        return result.action_list
+        return result.action_list,node_count
 
     def baseline_ai(self):
         self.state.print_state()
